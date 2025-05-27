@@ -1,20 +1,22 @@
 // script.js
 
+// 1. Configuração do Supabase
+// **ATENÇÃO:** Para um ambiente de produção real, estas chaves devem ser gerenciadas
+// por variáveis de ambiente (ex: process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY)
+// e configuradas no seu serviço de deploy (Vercel, Netlify, etc.) para segurança.
+// Para este exemplo em HTML/JS puro, elas ficam aqui.
+const SUPABASE_URL = 'https://bilhtpgeclctnybjemzeg.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJpbGh0cGdlbGN0bnliamVtemVnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgyNzgzOTYsImV4cCI6MjA2Mzg1NDM5Nn0.yybV4HP0d9KAJGxMq7y8N_AHKgqPHNXoqu0oH_Waoh4';
+
+const supabase = Supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
 // Aguarda o carregamento completo do DOM
-document.addEventListener('DOMContentLoaded', () => {
-    // --- Funções Auxiliares para LocalStorage ---
-    function loadData(key, defaultData) {
-        const storedData = localStorage.getItem(key);
-        return storedData ? JSON.parse(storedData) : defaultData;
-    }
+document.addEventListener('DOMContentLoaded', async () => { // Adicionado 'async' aqui
 
-    function saveData(key, data) {
-        localStorage.setItem(key, JSON.stringify(data));
-    }
-
-    function getNextId(arr) {
-        return arr.length > 0 ? Math.max(...arr.map(item => item.id)) + 1 : 1;
-    }
+    // --- Funções Auxiliares para LocalStorage (REMOVIDAS OU MODIFICADAS) ---
+    // Estas funções loadData e saveData NÃO SÃO MAIS NECESSÁRIAS
+    // pois os dados virão diretamente do Supabase.
+    // getNextId também não é mais necessário, pois o Supabase gera IDs automaticamente.
 
     // --- Referências Globais e Dados da Aplicação ---
     const navLinks = document.querySelectorAll('.nav-link');
@@ -22,72 +24,33 @@ document.addEventListener('DOMContentLoaded', () => {
     const pages = document.querySelectorAll('.page');
     const currentPageTitle = document.getElementById('current-page-title');
 
-    // Referências para os novos grids do Dashboard
     const dashboardSummaryGrid = document.querySelector('.dashboard-summary-grid');
-    const dashboardReportsGrid = document.querySelector('.dashboard-reports-grid');
+    const dashboardInsightsGrid = document.querySelector('.dashboard-insights-grid');
     const monthlyPerformanceChart = document.getElementById('monthly-performance-chart');
     const recentActivityList = document.getElementById('recent-activity-list');
 
+    // Dados da aplicação agora serão buscados do Supabase.
+    // Mantenha as variáveis aqui, mas elas serão populadas pelas funções de fetch.
+    let userProfile = {}; // Será preenchido por uma função específica se houver auth
+    let churches = [];
+    let members = [];
+    let events = [];
+    let transactions = [];
+    let posts = [];
+    let chatMessages = []; // Para o chat, podemos simular ou usar outra tabela, simplificando com memória para este exemplo.
 
-    // Dados carregados do localStorage ou padrão
-    let userProfile = loadData('userProfile', {
+    // --- Referências do Perfil ---
+    // Manter o perfil em localStorage ou usar autenticação Supabase é uma escolha.
+    // Para simplicidade, vamos manter a lógica do perfil ainda no localStorage para este exemplo,
+    // pois a autenticação exigiria mais tabelas e RLS.
+    // Se quiser migrar o perfil, precisaria de uma tabela `profiles` no Supabase.
+    userProfile = JSON.parse(localStorage.getItem('userProfile')) || {
         name: "João da Silva",
         email: "joao.silva@example.com",
         phone: "(21) 98765-4321",
         address: "Rua Exemplo, 123\nBairro Centro\nRio de Janeiro - RJ"
-    });
+    };
 
-    let churches = loadData('churches', [
-        { id: 1, name: "Igreja da Comunidade Viva", address: "Av. Principal, 456 - Centro", contact: "(11) 2345-6789", members: 150 },
-        { id: 2, name: "Assembleia de Deus Maranata", address: "Rua da Paz, 10 - Bairro Feliz", contact: "contato@admaranata.org", members: 200 },
-        { id: 3, name: "Primeira Igreja Batista", address: "Praça da Fé, 78 - Cidade Nova", contact: "(21) 99887-6655", members: 100 }
-    ]);
-    let nextChurchId = getNextId(churches);
-
-    let members = loadData('members', [
-        { id: 1, name: "Maria Oliveira", email: "maria.o@example.com", phone: "(21) 91234-5678", status: "Ativo", churchId: 1, entryDate: "2023-01-15" },
-        { id: 2, name: "Pedro Santos", email: "pedro.s@example.com", phone: "(21) 98765-4321", status: "Ativo", churchId: 2, entryDate: "2022-11-01" },
-        { id: 3, name: "Ana Souza", email: "ana.s@example.com", phone: "(21) 91122-3344", status: "Novo", churchId: 1, entryDate: "2025-05-01" },
-        { id: 4, name: "Lucas Costa", email: "lucas.c@example.com", phone: "(21) 95544-3322", status: "Ativo", churchId: 3, entryDate: "2024-03-10" },
-        { id: 5, name: "Fernanda Lima", email: "fernanda.l@example.com", phone: "(21) 97788-9900", status: "Inativo", churchId: 2, entryDate: "2021-06-20" }
-    ]);
-    let nextMemberId = getNextId(members);
-
-    let events = loadData('events', [
-        { id: 1, title: "Culto de Domingo", date: "2025-06-01", time: "10:00", location: "Igreja da Comunidade Viva", description: "Culto semanal com pregação e louvor.", type: "Culto" },
-        { id: 2, title: "Estudo Bíblico", date: "2025-05-29", time: "19:30", location: "Salão Comunitário", description: "Estudo aprofundado sobre o livro de Gênesis.", type: "Estudo" },
-        { id: 3, title: "Ação Social - Visita ao Asilo", date: "2025-06-15", time: "09:00", location: "Asilo Recanto Feliz", description: "Arrecadação de donativos e visita aos idosos.", type: "Social" },
-        { id: 4, title: "Reunião de Líderes", date: "2025-06-05", time: "20:00", location: "Secretaria da Igreja", description: "Reunião mensal de líderes.", type: "Reunião" }
-    ]);
-    let nextEventId = getNextId(events);
-
-    let transactions = loadData('transactions', [
-        { id: 1, description: "Dízimo de João", amount: 150.00, type: "revenue", date: "2025-05-20" },
-        { id: 2, description: "Oferta da Campanha", amount: 300.00, type: "revenue", date: "2025-05-20" },
-        { id: 3, description: "Conta de Luz", amount: 85.50, type: "expense", date: "2025-05-22" },
-        { id: 4, description: "Material de Limpeza", amount: 45.00, type: "expense", date: "2025-05-25" },
-        { id: 5, description: "Doação de Maria", amount: 50.00, type: "revenue", date: "2025-05-26" },
-        { id: 6, description: "Manutenção do Templo", amount: 250.00, type: "expense", date: "2025-05-27" }
-    ]);
-    let nextTransactionId = getNextId(transactions);
-
-    let posts = loadData('posts', [
-        { id: 1, author: "Admin", content: "Bem-vindos à nossa nova plataforma de comunicação! 🙏", date: "2025-05-26 10:00" },
-        { id: 2, author: "Maria Oliveira", content: "Agradeço a todos pela oração na semana passada, me sinto muito melhor! Deus abençoe. ✨", date: "2025-05-26 14:30" },
-        { id: 3, author: "Pedro Santos", content: "Lembrete: Nosso estudo bíblico é amanhã às 19:30! Não percam! 📖", date: "2025-05-26 18:00" },
-        { id: 4, author: "João da Silva", content: "Ótima iniciativa o novo Dashboard! Me ajudou a ver o total de membros rapidinho! 👍", date: "2025-05-27 15:00" }
-    ]);
-    let nextPostId = getNextId(posts);
-
-    let chatMessages = loadData('chatMessages', [
-        { id: 1, sender: "João da Silva", content: "Olá a todos! Sejam bem-vindos ao chat da comunidade.", timestamp: new Date("2025-05-26T09:00:00").toISOString(), type: "sent" },
-        { id: 2, sender: "Maria Oliveira", content: "Amém! Paz a todos.", timestamp: new Date("2025-05-26T09:05:00").toISOString(), type: "received" },
-        { id: 3, sender: "Pedro Santos", content: "Graça e paz!", timestamp: new Date("2025-05-26T09:10:00").toISOString(), type: "received" }
-    ]);
-    let nextChatMessageId = getNextId(chatMessages);
-
-
-    // --- Referências do Perfil ---
     const profileDisplay = document.getElementById('profile-display');
     const profileForm = document.getElementById('profile-form');
     const editProfileButton = document.getElementById('edit-profile-button');
@@ -97,10 +60,18 @@ document.addEventListener('DOMContentLoaded', () => {
     const phoneInput = document.getElementById('phone');
     const addressInput = document.getElementById('address');
 
-    // --- Referências do Chat ---
+    // --- Referências do Chat (Manteremos em memória ou Supabase para o chat) ---
     const chatMessagesContainer = document.getElementById('chat-messages');
     const chatInput = document.getElementById('chat-input');
     const chatSendButton = document.getElementById('chat-send-button');
+    // Para o chat, podemos usar uma tabela `chat_messages` no Supabase ou manter em memória/localStorage
+    // Para este exemplo, vamos manter em memória/localStorage para não adicionar mais uma tabela ao setup inicial do Supabase
+    chatMessages = JSON.parse(localStorage.getItem('chatMessages')) || [
+        { id: 1, sender: "João da Silva", content: "Olá a todos! Sejam bem-vindos ao chat da comunidade.", timestamp: new Date("2025-05-26T09:00:00").toISOString(), type: "sent" },
+        { id: 2, sender: "Maria Oliveira", content: "Amém! Paz a todos.", timestamp: new Date("2025-05-26T09:05:00").toISOString(), type: "received" }
+    ];
+    let nextChatMessageId = chatMessages.length > 0 ? Math.max(...chatMessages.map(item => item.id)) + 1 : 1;
+
 
     // --- Referências de Igrejas ---
     const churchListDisplay = document.getElementById('church-list-display');
@@ -155,7 +126,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     // --- Funções de Navegação de Página ---
-    function showPage(pageData) {
+    async function showPage(pageData) { // Adicionado 'async'
         const pageId = pageData + '-page';
 
         pages.forEach(p => p.classList.remove('active'));
@@ -167,7 +138,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const activeNavLink = document.querySelector(`a[data-page="${pageData}"]`);
         if (activeNavLink) activeNavLink.classList.add('active');
 
-        // Mapeia o título da página para o cabeçalho
         const pageTitleMap = {
             'home': 'Dashboard',
             'profile': 'Meu Perfil',
@@ -184,32 +154,95 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // Lógica específica para cada página ao ser exibida
+        // Agora com `await` para esperar os dados do Supabase
         if (pageData === 'home') {
-            renderDashboard(); // Renderiza o dashboard completo ao acessar a página inicial
+            await fetchAllData(); // Busca todos os dados necessários para o dashboard
+            renderDashboard();
         } else if (pageData === 'profile') {
-            loadProfileData();
+            loadProfileData(); // Perfil ainda em localStorage para simplicidade
             toggleProfileEditMode(false);
         } else if (pageData === 'churches') {
+            await fetchChurches();
             renderChurchesList();
             toggleChurchFormMode(false);
         } else if (pageData === 'members') {
+            await fetchMembers();
+            await fetchChurches(); // Precisa das igrejas para exibir o nome da igreja
             renderMembersList();
             toggleMemberFormMode(false);
         } else if (pageData === 'events') {
+            await fetchEvents();
             renderEventsList();
             toggleEventFormMode(false);
         } else if (pageData === 'finances') {
+            await fetchTransactions();
             renderFinancesSummary();
             renderTransactionsList();
             toggleTransactionFormMode(false);
         } else if (pageData === 'social') {
+            await fetchPosts();
             renderPostsList();
         } else if (pageData === 'chat') {
-            renderChatMessages();
+            // Se o chat for para o Supabase, descomente a linha abaixo e crie fetchChatMessages
+            // await fetchChatMessages();
+            renderChatMessages(); // Chat ainda usa localStorage
         }
     }
 
-    // --- Funções de Chat ---
+    // --- NOVAS Funções para Interagir com Supabase ---
+
+    // Generic fetch (para todas as tabelas)
+    async function fetchData(tableName) {
+        try {
+            const { data, error } = await supabase
+                .from(tableName)
+                .select('*')
+                .order('created_at', { ascending: false }); // Ordena por data de criação, mais recente primeiro
+
+            if (error) {
+                console.error(`Erro ao buscar ${tableName}:`, error.message);
+                return [];
+            }
+            return data || [];
+        } catch (e) {
+            console.error(`Exceção ao buscar ${tableName}:`, e.message);
+            return [];
+        }
+    }
+
+    async function fetchChurches() {
+        churches = await fetchData('churches');
+    }
+
+    async function fetchMembers() {
+        members = await fetchData('members');
+    }
+
+    async function fetchEvents() {
+        events = await fetchData('events');
+    }
+
+    async function fetchTransactions() {
+        transactions = await fetchData('transactions');
+    }
+
+    async function fetchPosts() {
+        posts = await fetchData('posts');
+    }
+
+    // Função para buscar todos os dados necessários para o dashboard
+    async function fetchAllData() {
+        await Promise.all([
+            fetchChurches(),
+            fetchMembers(),
+            fetchEvents(),
+            fetchTransactions(),
+            fetchPosts()
+        ]);
+    }
+
+
+    // --- Funções de Chat (AINDA EM LOCALSTORAGE PARA SIMPLICIDADE) ---
     function addMessage(messageText, senderName, type = 'sent') {
         const newMessage = {
             id: nextChatMessageId++,
@@ -219,20 +252,22 @@ document.addEventListener('DOMContentLoaded', () => {
             type: type
         };
         chatMessages.push(newMessage);
-        saveData('chatMessages', chatMessages);
-        renderChatMessages(); // Atualiza a lista de mensagens
+        localStorage.setItem('chatMessages', JSON.stringify(chatMessages)); // Salva no localStorage
+        renderChatMessages();
     }
 
     function renderChatMessages() {
         if (!chatMessagesContainer) return;
+        chatMessagesContainer.innerHTML = '';
 
-        chatMessagesContainer.innerHTML = ''; // Limpa o conteúdo existente
+        // Ordenar as mensagens do chat pela data/hora para exibir corretamente
+        const sortedChatMessages = [...chatMessages].sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
 
-        chatMessages.forEach(msg => {
+        sortedChatMessages.forEach(msg => {
             const messageElement = document.createElement('p');
-            messageElement.classList.add(`message-${msg.type}`, 'fade-in');
+            messageElement.classList.add(`message-${msg.type}`);
 
-            const senderSpan = document.createElement('span');
+            const senderSpan = document.createElement('strong');
             senderSpan.textContent = `${msg.sender}:`;
             messageElement.appendChild(senderSpan);
 
@@ -241,23 +276,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
             chatMessagesContainer.appendChild(messageElement);
         });
-        chatMessagesContainer.scrollTop = chatMessagesContainer.scrollHeight; // Scroll para a última mensagem
+        chatMessagesContainer.scrollTop = chatMessagesContainer.scrollHeight;
     }
 
-    // --- Funções de Perfil ---
+
+    // --- Funções de Perfil (AINDA EM LOCALSTORAGE) ---
     function loadProfileData() {
-        // Verifica se os elementos de exibição existem antes de tentar acessá-los
         const nameDisplay = document.getElementById('profile-name-display');
         const emailDisplay = document.getElementById('profile-email-display');
         const phoneDisplay = document.getElementById('profile-phone-display');
         const addressDisplay = document.getElementById('profile-address-display');
 
         if (nameDisplay) nameDisplay.textContent = userProfile.name;
-        if (emailDisplay) emailDisplay.textContent = userProfile.email;
+        if (emailDisplay) email.textContent = userProfile.email;
         if (phoneDisplay) phoneDisplay.textContent = userProfile.phone;
         if (addressDisplay) addressDisplay.textContent = userProfile.address;
 
-        // Preenche os inputs do formulário
         if (nameInput) nameInput.value = userProfile.name;
         if (emailInput) emailInput.value = userProfile.email;
         if (phoneInput) phoneInput.value = userProfile.phone;
@@ -265,20 +299,20 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function toggleProfileEditMode(isEditing) {
-        if (profileDisplay && profileForm) { // Garante que os elementos existam
+        if (profileDisplay && profileForm) {
             if (isEditing) {
                 profileDisplay.classList.add('hidden');
                 profileForm.classList.remove('hidden');
             } else {
                 profileDisplay.classList.remove('hidden');
                 profileForm.classList.add('hidden');
-                loadProfileData(); // Recarrega dados para exibir os atualizados ou originais
+                loadProfileData();
             }
         }
     }
 
-    // --- Funções de Igrejas ---
-    function renderChurchesList() {
+    // --- Funções de Igrejas (AGORA COM SUPABASE) ---
+    async function renderChurchesList() {
         churchesList.innerHTML = '';
         if (churches.length === 0) {
             const noChurchItem = document.createElement('li');
@@ -305,42 +339,59 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         churchesList.querySelectorAll('.delete-church-btn').forEach(button => {
-            button.addEventListener('click', (e) => {
+            button.addEventListener('click', async (e) => { // Adicionado 'async'
                 const churchId = parseInt(e.target.dataset.id);
-                deleteChurch(churchId);
+                await deleteChurch(churchId); // Adicionado 'await'
             });
         });
     }
 
-    function addChurch(name, address, contact) {
-        const newChurch = {
-            id: nextChurchId++,
-            name: name,
-            address: address,
-            contact: contact,
-            members: 0 // Novo campo para o dashboard
-        };
-        churches.push(newChurch);
-        saveData('churches', churches); // Salva no localStorage
-        renderChurchesList();
-        if (document.getElementById('home-page').classList.contains('active')) {
-             renderDashboard(); // Atualiza o dashboard
-        }
-        alert("Igreja cadastrada com sucesso!");
-    }
+    async function addChurch(name, address, contact) {
+        try {
+            const { data, error } = await supabase
+                .from('churches')
+                .insert([{ name, address, contact, members: 0 }]) // members: 0 é o default
+                .select(); // Retorna o item inserido
 
-    function deleteChurch(id) {
-        if (confirm("Tem certeza que deseja excluir esta igreja?")) {
-            churches = churches.filter(church => church.id !== id);
-            // Também remover membros associados a esta igreja (opcional, para consistência)
-            members = members.filter(member => member.churchId !== id);
-            saveData('churches', churches); // Salva no localStorage
-            saveData('members', members); // Salva membros atualizados
+            if (error) throw error;
+
+            churches.push(data[0]); // Adiciona o item retornado à lista local
             renderChurchesList();
             if (document.getElementById('home-page').classList.contains('active')) {
-                 renderDashboard(); // Atualiza o dashboard
+                renderDashboard();
+            }
+            alert("Igreja cadastrada com sucesso!");
+        } catch (error) {
+            console.error("Erro ao adicionar igreja:", error.message);
+            alert("Erro ao adicionar igreja: " + error.message);
+        }
+    }
+
+    async function deleteChurch(id) {
+        if (!confirm("Tem certeza que deseja excluir esta igreja?")) return;
+
+        try {
+            const { error } = await supabase
+                .from('churches')
+                .delete()
+                .eq('id', id);
+
+            if (error) throw error;
+
+            churches = churches.filter(church => church.id !== id);
+            // Também remover membros associados a esta igreja (opcional, para consistência)
+            // Se você configurou Foreign Keys no Supabase, a exclusão em cascata cuidaria disso.
+            // Caso contrário, você teria que fazer:
+            // await supabase.from('members').delete().eq('churchId', id);
+            members = members.filter(member => member.churchId !== id); // Remove localmente
+            renderChurchesList();
+            if (document.getElementById('home-page').classList.contains('active')) {
+                renderDashboard();
             }
             alert("Igreja excluída com sucesso!");
+        } catch (error) {
+            console.error("Erro ao excluir igreja:", error.message);
+            alert("Erro ao excluir igreja: " + error.message);
         }
     }
 
@@ -360,8 +411,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- Funções de Membros ---
-    function renderMembersList() {
+    // --- Funções de Membros (AGORA COM SUPABASE) ---
+    async function renderMembersList() {
         membersList.innerHTML = '';
         if (members.length === 0) {
             const noMemberItem = document.createElement('li');
@@ -373,7 +424,7 @@ document.addEventListener('DOMContentLoaded', () => {
         members.forEach(member => {
             const listItem = document.createElement('li');
             listItem.setAttribute('role', 'listitem');
-            const memberChurch = churches.find(c => c.id === member.churchId);
+            const memberChurch = churches.find(c => c.id === member.churchId); // Busca o nome da igreja
             const churchName = memberChurch ? memberChurch.name : 'Não Atribuída';
 
             listItem.innerHTML = `
@@ -383,7 +434,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <p>E-mail: ${member.email || 'Não informado'}</p>
                     <p>Telefone: ${member.phone || 'Não informado'}</p>
                     <p>Status: ${member.status}</p>
-                    <p>Entrada: ${new Date(member.entryDate).toLocaleDateString('pt-BR')}</p>
+                    <p>Entrada: ${new Date(member.created_at).toLocaleDateString('pt-BR')}</p>
                 </div>
                 <div class="list-item-actions">
                     <button class="btn btn-secondary btn-small" data-id="${member.id}" aria-label="Editar ${member.name}"><i class="fas fa-edit"></i> Editar</button>
@@ -394,41 +445,54 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         membersList.querySelectorAll('.delete-member-btn').forEach(button => {
-            button.addEventListener('click', (e) => {
+            button.addEventListener('click', async (e) => { // Adicionado 'async'
                 const memberId = parseInt(e.target.dataset.id);
-                deleteMember(memberId);
+                await deleteMember(memberId); // Adicionado 'await'
             });
         });
     }
 
-    function addMember(name, email, phone, status, churchId, entryDate) {
-        const newMember = {
-            id: nextMemberId++,
-            name: name,
-            email: email,
-            phone: phone,
-            status: status,
-            churchId: parseInt(churchId), // Garante que seja número
-            entryDate: entryDate
-        };
-        members.push(newMember);
-        saveData('members', members); // Salva no localStorage
-        renderMembersList();
-        if (document.getElementById('home-page').classList.contains('active')) {
-             renderDashboard(); // Atualiza o dashboard
-        }
-        alert("Membro cadastrado com sucesso!");
-    }
+    async function addMember(name, email, phone, status, churchId) { // entryDate será `created_at`
+        try {
+            const { data, error } = await supabase
+                .from('members')
+                .insert([{ name, email, phone, status, churchId: parseInt(churchId) }])
+                .select();
 
-    function deleteMember(id) {
-        if (confirm("Tem certeza que deseja excluir este membro?")) {
-            members = members.filter(member => member.id !== id);
-            saveData('members', members); // Salva no localStorage
+            if (error) throw error;
+
+            members.push(data[0]);
             renderMembersList();
             if (document.getElementById('home-page').classList.contains('active')) {
-                renderDashboard(); // Atualiza o dashboard
+                renderDashboard();
+            }
+            alert("Membro cadastrado com sucesso!");
+        } catch (error) {
+            console.error("Erro ao adicionar membro:", error.message);
+            alert("Erro ao adicionar membro: " + error.message);
+        }
+    }
+
+    async function deleteMember(id) {
+        if (!confirm("Tem certeza que deseja excluir este membro?")) return;
+
+        try {
+            const { error } = await supabase
+                .from('members')
+                .delete()
+                .eq('id', id);
+
+            if (error) throw error;
+
+            members = members.filter(member => member.id !== id);
+            renderMembersList();
+            if (document.getElementById('home-page').classList.contains('active')) {
+                renderDashboard();
             }
             alert("Membro excluído com sucesso!");
+        } catch (error) {
+            console.error("Erro ao excluir membro:", error.message);
+            alert("Erro ao excluir membro: " + error.message);
         }
     }
 
@@ -441,7 +505,27 @@ document.addEventListener('DOMContentLoaded', () => {
                 memberEmailInput.value = '';
                 memberPhoneInput.value = '';
                 memberStatusSelect.value = 'Ativo';
-                // Adicionar campo de seleção de igreja e data de entrada se necessário
+                // Popule a seleção de igrejas aqui
+                const churchSelect = document.createElement('select');
+                churchSelect.id = 'member-church';
+                churches.forEach(church => {
+                    const option = document.createElement('option');
+                    option.value = church.id;
+                    option.textContent = church.name;
+                    churchSelect.appendChild(option);
+                });
+                const existingChurchSelect = memberForm.querySelector('#member-church');
+                if (existingChurchSelect) {
+                    existingChurchSelect.replaceWith(churchSelect);
+                } else {
+                    const formGroup = memberForm.querySelector('.form-group label[for="member-status"]').parentNode;
+                    const churchLabel = document.createElement('label');
+                    churchLabel.setAttribute('for', 'member-church');
+                    churchLabel.textContent = 'Igreja:';
+                    formGroup.parentNode.insertBefore(churchLabel, formGroup);
+                    formGroup.parentNode.insertBefore(churchSelect, formGroup);
+                }
+
             } else {
                 memberListDisplay.classList.remove('hidden');
                 memberForm.classList.add('hidden');
@@ -450,8 +534,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- Funções de Eventos ---
-    function renderEventsList() {
+    // --- Funções de Eventos (AGORA COM SUPABASE) ---
+    async function renderEventsList() {
         eventsList.innerHTML = '';
         if (events.length === 0) {
             const noEventItem = document.createElement('li');
@@ -481,41 +565,54 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         eventsList.querySelectorAll('.delete-event-btn').forEach(button => {
-            button.addEventListener('click', (e) => {
+            button.addEventListener('click', async (e) => { // Adicionado 'async'
                 const eventId = parseInt(e.target.dataset.id);
-                deleteEvent(eventId);
+                await deleteEvent(eventId); // Adicionado 'await'
             });
         });
     }
 
-    function addEvent(title, date, time, location, description, type) {
-        const newEvent = {
-            id: nextEventId++,
-            title: title,
-            date: date,
-            time: time,
-            location: location,
-            description: description,
-            type: type // Novo campo para o dashboard
-        };
-        events.push(newEvent);
-        saveData('events', events); // Salva no localStorage
-        renderEventsList();
-        if (document.getElementById('home-page').classList.contains('active')) {
-             renderDashboard(); // Atualiza o dashboard
-        }
-        alert("Evento cadastrado com sucesso!");
-    }
+    async function addEvent(title, date, time, location, description, type) {
+        try {
+            const { data, error } = await supabase
+                .from('events')
+                .insert([{ title, date, time, location, description, type }])
+                .select();
 
-    function deleteEvent(id) {
-        if (confirm("Tem certeza que deseja excluir este evento?")) {
-            events = events.filter(event => event.id !== id);
-            saveData('events', events); // Salva no localStorage
+            if (error) throw error;
+
+            events.push(data[0]);
             renderEventsList();
             if (document.getElementById('home-page').classList.contains('active')) {
-                renderDashboard(); // Atualiza o dashboard
+                renderDashboard();
+            }
+            alert("Evento cadastrado com sucesso!");
+        } catch (error) {
+            console.error("Erro ao adicionar evento:", error.message);
+            alert("Erro ao adicionar evento: " + error.message);
+        }
+    }
+
+    async function deleteEvent(id) {
+        if (!confirm("Tem certeza que deseja excluir este evento?")) return;
+
+        try {
+            const { error } = await supabase
+                .from('events')
+                .delete()
+                .eq('id', id);
+
+            if (error) throw error;
+
+            events = events.filter(event => event.id !== id);
+            renderEventsList();
+            if (document.getElementById('home-page').classList.contains('active')) {
+                renderDashboard();
             }
             alert("Evento excluído com sucesso!");
+        } catch (error) {
+            console.error("Erro ao excluir evento:", error.message);
+            alert("Erro ao excluir evento: " + error.message);
         }
     }
 
@@ -537,9 +634,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- Funções de Finanças ---
+    // --- Funções de Finanças (AGORA COM SUPABASE) ---
     function formatCurrency(value) {
-        return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        return parseFloat(value).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
     }
 
     function calculateFinancialSummary() {
@@ -548,9 +645,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         transactions.forEach(t => {
             if (t.type === 'revenue') {
-                totalRevenue += t.amount;
+                totalRevenue += parseFloat(t.amount); // Converter para número
             } else if (t.type === 'expense') {
-                totalExpenses += t.amount;
+                totalExpenses += parseFloat(t.amount);
             }
         });
 
@@ -560,13 +657,13 @@ document.addEventListener('DOMContentLoaded', () => {
         if (totalExpensesSpan) totalExpensesSpan.textContent = formatCurrency(totalExpenses);
         if (currentBalanceSpan) {
             currentBalanceSpan.textContent = formatCurrency(balance);
-            currentBalanceSpan.classList.remove('balance-positive', 'balance-negative'); // Remove classes anteriores
-            currentBalanceSpan.classList.add(balance >= 0 ? 'balance-positive' : 'balance-negative');
+            currentBalanceSpan.classList.remove('balance-positive', 'balance-negative');
+            currentBalanceSpan.classList.add(balance >= 0 ? 'finance-balance balance-positive' : 'finance-balance balance-negative');
         }
-        return { totalRevenue, totalExpenses, balance }; // Retorna os valores para o dashboard
+        return { totalRevenue, totalExpenses, balance };
     }
 
-    function renderTransactionsList() {
+    async function renderTransactionsList() {
         transactionsList.innerHTML = '';
         if (transactions.length === 0) {
             const noTransactionItem = document.createElement('li');
@@ -575,13 +672,13 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        // Ordenar transações por data, da mais recente para a mais antiga
-        const sortedTransactions = [...transactions].sort((a, b) => new Date(b.date) - new Date(a.date));
+        // Ordenar transações por created_at (ou data), da mais recente para a mais antiga
+        const sortedTransactions = [...transactions].sort((a, b) => new Date(b.created_at || b.date) - new Date(a.created_at || a.date));
 
         sortedTransactions.forEach(transaction => {
             const listItem = document.createElement('li');
             listItem.setAttribute('role', 'listitem');
-            const amountClass = transaction.type === 'revenue' ? 'revenue' : 'expense';
+            const amountClass = transaction.type === 'revenue' ? 'finance-revenue' : 'finance-expense';
             const sign = transaction.type === 'revenue' ? '+' : '-';
 
             listItem.innerHTML = `
@@ -592,7 +689,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="transaction-amount ${amountClass}">
                     ${sign} ${formatCurrency(transaction.amount)}
                 </div>
-                <div class="transaction-actions">
+                <div class="list-item-actions">
                     <button class="btn btn-danger btn-small delete-transaction-btn" data-id="${transaction.id}" aria-label="Excluir transação ${transaction.description}"><i class="fas fa-trash-alt"></i> Excluir</button>
                 </div>
             `;
@@ -600,41 +697,56 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         transactionsList.querySelectorAll('.delete-transaction-btn').forEach(button => {
-            button.addEventListener('click', (e) => {
+            button.addEventListener('click', async (e) => { // Adicionado 'async'
                 const transactionId = parseInt(e.target.dataset.id);
-                deleteTransaction(transactionId);
+                await deleteTransaction(transactionId); // Adicionado 'await'
             });
         });
     }
 
-    function addTransaction(description, amount, type, date) {
-        const newTransaction = {
-            id: nextTransactionId++,
-            description: description,
-            amount: parseFloat(amount),
-            type: type,
-            date: date
-        };
-        transactions.push(newTransaction);
-        saveData('transactions', transactions); // Salva no localStorage
-        renderFinancesSummary();
-        renderTransactionsList();
-        if (document.getElementById('home-page').classList.contains('active')) {
-             renderDashboard(); // Atualiza o dashboard
-        }
-        alert("Transação registrada com sucesso!");
-    }
+    async function addTransaction(description, amount, type, date) {
+        try {
+            const { data, error } = await supabase
+                .from('transactions')
+                .insert([{ description, amount: parseFloat(amount), type, date }])
+                .select();
 
-    function deleteTransaction(id) {
-        if (confirm("Tem certeza que deseja excluir esta transação?")) {
-            transactions = transactions.filter(t => t.id !== id);
-            saveData('transactions', transactions); // Salva no localStorage
+            if (error) throw error;
+
+            transactions.push(data[0]);
             renderFinancesSummary();
             renderTransactionsList();
             if (document.getElementById('home-page').classList.contains('active')) {
-                renderDashboard(); // Atualiza o dashboard
+                renderDashboard();
+            }
+            alert("Transação registrada com sucesso!");
+        } catch (error) {
+            console.error("Erro ao adicionar transação:", error.message);
+            alert("Erro ao adicionar transação: " + error.message);
+        }
+    }
+
+    async function deleteTransaction(id) {
+        if (!confirm("Tem certeza que deseja excluir esta transação?")) return;
+
+        try {
+            const { error } = await supabase
+                .from('transactions')
+                .delete()
+                .eq('id', id);
+
+            if (error) throw error;
+
+            transactions = transactions.filter(t => t.id !== id);
+            renderFinancesSummary();
+            renderTransactionsList();
+            if (document.getElementById('home-page').classList.contains('active')) {
+                renderDashboard();
             }
             alert("Transação excluída com sucesso!");
+        } catch (error) {
+            console.error("Erro ao excluir transação:", error.message);
+            alert("Erro ao excluir transação: " + error.message);
         }
     }
 
@@ -661,9 +773,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- Funções de Rede Social ---
-    function renderPostsList() {
-        postsListContainer.innerHTML = '<h3>Últimas Postagens</h3>';
+    // --- Funções de Rede Social (AGORA COM SUPABASE) ---
+    async function renderPostsList() {
+        postsListContainer.innerHTML = '<h3 class="card-title">Últimas Postagens</h3>';
         if (posts.length === 0) {
             const noPostItem = document.createElement('p');
             noPostItem.textContent = "Nenhuma postagem ainda. Seja o primeiro a compartilhar!";
@@ -671,8 +783,8 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        // Ordenar posts por data, do mais recente para o mais antigo
-        const sortedPosts = [...posts].sort((a, b) => new Date(b.date) - new Date(a.date));
+        // Ordenar posts por created_at, do mais recente para o mais antigo
+        const sortedPosts = [...posts].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
         sortedPosts.forEach(post => {
             const postItem = document.createElement('div');
@@ -681,7 +793,7 @@ document.addEventListener('DOMContentLoaded', () => {
             postItem.innerHTML = `
                 <div class="post-header">
                     <span class="post-author">${post.author}</span>
-                    <span class="post-date">${new Date(post.date).toLocaleString('pt-BR')}</span>
+                    <span class="post-date">${new Date(post.created_at).toLocaleString('pt-BR')}</span>
                 </div>
                 <p class="post-content">${post.content}</p>
                 <div class="post-actions">
@@ -692,76 +804,87 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         postsListContainer.querySelectorAll('.delete-post-btn').forEach(button => {
-            button.addEventListener('click', (e) => {
+            button.addEventListener('click', async (e) => { // Adicionado 'async'
                 const postId = parseInt(e.target.dataset.id);
-                deletePost(postId);
+                await deletePost(postId); // Adicionado 'await'
             });
         });
     }
 
-    function addPost(author, content) {
-        const newPost = {
-            id: nextPostId++,
-            author: author,
-            content: content,
-            date: new Date().toLocaleString('pt-BR')
-        };
-        posts.push(newPost);
-        saveData('posts', posts); // Salva no localStorage
-        renderPostsList();
-        // Atualiza o dashboard após nova postagem
-        if (document.getElementById('home-page').classList.contains('active')) {
-             renderDashboard();
+    async function addPost(author, content) {
+        try {
+            const { data, error } = await supabase
+                .from('posts')
+                .insert([{ author, content }])
+                .select();
+
+            if (error) throw error;
+
+            posts.push(data[0]);
+            renderPostsList();
+            if (document.getElementById('home-page').classList.contains('active')) {
+                renderDashboard();
+            }
+            alert("Postagem criada com sucesso!");
+        } catch (error) {
+            console.error("Erro ao adicionar post:", error.message);
+            alert("Erro ao adicionar post: " + error.message);
         }
-        alert("Postagem criada com sucesso!");
     }
 
-    function deletePost(id) {
-        if (confirm("Tem certeza que deseja excluir esta postagem?")) {
+    async function deletePost(id) {
+        if (!confirm("Tem certeza que deseja excluir esta postagem?")) return;
+
+        try {
+            const { error } = await supabase
+                .from('posts')
+                .delete()
+                .eq('id', id);
+
+            if (error) throw error;
+
             posts = posts.filter(post => post.id !== id);
-            saveData('posts', posts); // Salva no localStorage
             renderPostsList();
-            // Atualiza o dashboard após exclusão de postagem
             if (document.getElementById('home-page').classList.contains('active')) {
                 renderDashboard();
             }
             alert("Postagem excluída com sucesso!");
+        } catch (error) {
+            console.error("Erro ao excluir post:", error.message);
+            alert("Erro ao excluir post: " + error.message);
         }
     }
 
     // --- Funções para renderizar o Dashboard Detalhado ---
 
     function renderDashboard() {
-        if (!dashboardSummaryGrid || !dashboardReportsGrid || !monthlyPerformanceChart || !recentActivityList) return;
+        if (!dashboardSummaryGrid || !dashboardInsightsGrid || !monthlyPerformanceChart || !recentActivityList) return;
 
-        // Limpa os grids existentes
         dashboardSummaryGrid.innerHTML = '';
-        dashboardReportsGrid.innerHTML = '';
+        dashboardInsightsGrid.innerHTML = '';
         monthlyPerformanceChart.innerHTML = '';
         recentActivityList.innerHTML = '';
 
-        // --- Seção de Resumos Principais ---
-        const { totalRevenue, totalExpenses, balance } = calculateFinancialSummary(); // Obtém os valores financeiros
+        const { totalRevenue, totalExpenses, balance } = calculateFinancialSummary();
 
-        // Card: Total de Membros
         const totalMembersCard = document.createElement('div');
         totalMembersCard.classList.add('summary-card');
         totalMembersCard.innerHTML = `
             <h4><i class="fas fa-users"></i> Total de Membros</h4>
             <span class="value">${members.length}</span>
+            <p class="last-item-detail">Membros cadastrados no sistema.</p>
         `;
         dashboardSummaryGrid.appendChild(totalMembersCard);
 
-        // Card: Próximo Evento
         const sortedEvents = [...events].sort((a, b) => new Date(a.date) - new Date(b.date));
-        const nextEvent = sortedEvents.find(event => new Date(event.date) >= new Date()); // Evento que ainda não passou
+        const nextEvent = sortedEvents.find(event => new Date(event.date) >= new Date());
 
         const nextEventCard = document.createElement('div');
         nextEventCard.classList.add('summary-card');
         if (nextEvent) {
             nextEventCard.innerHTML = `
                 <h4><i class="fas fa-calendar-alt"></i> Próximo Evento</h4>
-                <span class="value">${nextEvent.title}</span>
+                <span class="value">${nextEvent.title.substring(0, 15)}...</span>
                 <p class="last-item-detail">${new Date(nextEvent.date).toLocaleDateString('pt-BR')} às ${nextEvent.time}</p>
             `;
         } else {
@@ -773,28 +896,25 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         dashboardSummaryGrid.appendChild(nextEventCard);
 
-        // Card: Total de Igrejas
         const totalChurchesCard = document.createElement('div');
         totalChurchesCard.classList.add('summary-card');
         totalChurchesCard.innerHTML = `
             <h4><i class="fas fa-church"></i> Total de Igrejas</h4>
             <span class="value">${churches.length}</span>
+            <p class="last-item-detail">Igrejas gerenciadas.</p>
         `;
         dashboardSummaryGrid.appendChild(totalChurchesCard);
 
-        // Card: Saldo Financeiro
         const financeBalanceCard = document.createElement('div');
         financeBalanceCard.classList.add('summary-card');
-        const balanceClass = balance >= 0 ? 'balance-positive' : 'balance-negative';
+        const balanceClass = balance >= 0 ? 'finance-balance balance-positive' : 'finance-balance balance-negative';
         financeBalanceCard.innerHTML = `
             <h4><i class="fas fa-money-bill-wave"></i> Saldo Financeiro</h4>
             <span class="value ${balanceClass}">${formatCurrency(balance)}</span>
+            <p class="last-item-detail">Saldo atual da congregação.</p>
         `;
         dashboardSummaryGrid.appendChild(financeBalanceCard);
 
-        // --- Seção de Relatórios e Insights (novos cards) ---
-
-        // Card: Membros Ativos vs. Inativos
         const activeMembers = members.filter(m => m.status === 'Ativo').length;
         const inactiveMembers = members.filter(m => m.status === 'Inativo').length;
         const newMembers = members.filter(m => m.status === 'Novo').length;
@@ -802,71 +922,59 @@ document.addEventListener('DOMContentLoaded', () => {
         memberStatusCard.classList.add('summary-card', 'info');
         memberStatusCard.innerHTML = `
             <h4><i class="fas fa-user-check"></i> Status de Membros</h4>
-            <p class="value">${activeMembers} Ativos</p>
-            <p class="last-item-detail">${inactiveMembers} Inativos / ${newMembers} Novos</p>
+            <span class="value">${activeMembers}</span>
+            <p class="last-item-detail">Ativos | ${inactiveMembers} Inativos | ${newMembers} Novos</p>
         `;
-        dashboardReportsGrid.appendChild(memberStatusCard);
+        dashboardInsightsGrid.appendChild(memberStatusCard);
 
-        // Card: Eventos Pendentes
-        const pendingEvents = sortedEvents.filter(event => new Date(event.date) >= new Date()).length;
-        const pendingEventsCard = document.createElement('div');
-        pendingEventsCard.classList.add('summary-card', 'warning');
-        pendingEventsCard.innerHTML = `
-            <h4><i class="fas fa-calendar-times"></i> Eventos Pendentes</h4>
-            <span class="value">${pendingEvents}</span>
-            <p class="last-item-detail">Fique atento às próximas atividades.</p>
+        const eventTypeCounts = events.reduce((acc, event) => {
+            acc[event.type] = (acc[event.type] || 0) + 1;
+            return acc;
+        }, {});
+        const mostFrequentType = Object.keys(eventTypeCounts).length > 0 ? Object.keys(eventTypeCounts).reduce((a, b) => eventTypeCounts[a] > eventTypeCounts[b] ? a : b) : 'N/A';
+        const eventTypeCard = document.createElement('div');
+        eventTypeCard.classList.add('summary-card', 'warning');
+        eventTypeCard.innerHTML = `
+            <h4><i class="fas fa-calendar-check"></i> Eventos por Tipo</h4>
+            <span class="value">${Object.keys(eventTypeCounts).length}</span>
+            <p class="last-item-detail">Tipo mais comum: ${mostFrequentType}</p>
         `;
-        dashboardReportsGrid.appendChild(pendingEventsCard);
+        dashboardInsightsGrid.appendChild(eventTypeCard);
 
-        // Card: Última Transação
-        const sortedTransactions = [...transactions].sort((a, b) => new Date(b.date) - new Date(a.date));
-        const lastTransaction = sortedTransactions.length > 0 ? sortedTransactions[0] : null;
-        const lastTransactionCard = document.createElement('div');
-        lastTransactionCard.classList.add('summary-card');
-        if (lastTransaction) {
-            const txClass = lastTransaction.type === 'revenue' ? 'revenue' : 'expense';
-            lastTransactionCard.innerHTML = `
-                <h4><i class="fas fa-exchange-alt"></i> Última Transação</h4>
-                <span class="value ${txClass}">${formatCurrency(lastTransaction.amount)}</span>
-                <p class="last-item-detail">${lastTransaction.description}</p>
-                <p class="last-item-detail">${new Date(lastTransaction.date).toLocaleDateString('pt-BR')}</p>
+        const currentMonthRevenue = transactions.filter(t => t.type === 'revenue' && new Date(t.date).getMonth() === new Date().getMonth()).reduce((sum, t) => sum + parseFloat(t.amount), 0);
+        const currentMonthExpense = transactions.filter(t => t.type === 'expense' && new Date(t.date).getMonth() === new Date().getMonth()).reduce((sum, t) => sum + parseFloat(t.amount), 0);
+        const financeFlowCard = document.createElement('div');
+        financeFlowCard.classList.add('summary-card', (currentMonthRevenue >= currentMonthExpense ? 'success' : 'danger'));
+        financeFlowCard.innerHTML = `
+            <h4><i class="fas fa-chart-pie"></i> Fluxo Mensal</h4>
+            <span class="value">${formatCurrency(currentMonthRevenue - currentMonthExpense)}</span>
+            <p class="last-item-detail">Receita: ${formatCurrency(currentMonthRevenue)} | Despesa: ${formatCurrency(currentMonthExpense)}</p>
+        `;
+        dashboardInsightsGrid.appendChild(financeFlowCard);
+
+        const churchesWithMembers = churches.map(church => ({
+            ...church,
+            memberCount: members.filter(m => m.churchId === church.id).length
+        })).sort((a, b) => b.memberCount - a.memberCount);
+        const topChurch = churchesWithMembers.length > 0 ? churchesWithMembers[0] : null;
+        const topChurchCard = document.createElement('div');
+        topChurchCard.classList.add('summary-card', 'info');
+        if (topChurch) {
+            topChurchCard.innerHTML = `
+                <h4><i class="fas fa-trophy"></i> Igreja Líder em Membros</h4>
+                <span class="value">${topChurch.memberCount}</span>
+                <p class="last-item-detail"><strong>${topChurch.name}</strong></p>
             `;
         } else {
-            lastTransactionCard.innerHTML = `
-                <h4><i class="fas fa-exchange-alt"></i> Última Transação</h4>
-                <span class="value">Nenhuma</span>
-                <p class="last-item-detail">Nenhuma transação recente.</p>
+            topChurchCard.innerHTML = `
+                <h4><i class="fas fa-trophy"></i> Igreja Líder em Membros</h4>
+                <span class="value">N/A</span>
+                <p class="last-item-detail">Nenhuma igreja com membros.</p>
             `;
         }
-        dashboardReportsGrid.appendChild(lastTransactionCard);
+        dashboardInsightsGrid.appendChild(topChurchCard);
 
-        // Card: Última Postagem (para o segundo grid também, se houver espaço)
-        const sortedPosts = [...posts].sort((a, b) => new Date(b.date) - new Date(a.date));
-        const latestPost = sortedPosts.length > 0 ? sortedPosts[0] : null;
-        const latestPostCard = document.createElement('div');
-        latestPostCard.classList.add('summary-card', 'success');
-        if (latestPost) {
-            latestPostCard.innerHTML = `
-                <h4><i class="fas fa-share-alt"></i> Última Postagem</h4>
-                <span class="value">${latestPost.author}</span>
-                <p class="last-item-detail">${latestPost.content.substring(0, 50)}...</p>
-                <p class="last-item-detail">${new Date(latestPost.date).toLocaleDateString('pt-BR')}</p>
-            `;
-        } else {
-            latestPostCard.innerHTML = `
-                <h4><i class="fas fa-share-alt"></i> Última Postagem</h4>
-                <span class="value">Nenhuma</span>
-                <p class="last-item-detail">Nenhuma postagem ainda.</p>
-            `;
-        }
-        dashboardReportsGrid.appendChild(latestPostCard);
-
-
-        // --- Seção de Gráfico Simulados ---
         renderSimulatedChart();
-
-
-        // --- Seção de Atividades Recentes ---
         renderRecentActivity();
     }
 
@@ -874,9 +982,9 @@ document.addEventListener('DOMContentLoaded', () => {
     function renderSimulatedChart() {
         if (!monthlyPerformanceChart) return;
 
-        monthlyPerformanceChart.innerHTML = ''; // Limpa o conteúdo
+        monthlyPerformanceChart.innerHTML = '';
 
-        // Simulação de dados para os últimos 6 meses (valores de exemplo)
+        // Obter dados reais de membros e transações para os últimos 6 meses
         const today = new Date();
         const dataPoints = [];
         for (let i = 5; i >= 0; i--) {
@@ -884,49 +992,66 @@ document.addEventListener('DOMContentLoaded', () => {
             const month = date.toLocaleString('pt-BR', { month: 'short' });
             const year = date.getFullYear().toString().substring(2,4);
 
-            // Valores simulados (você pode ajustar a lógica aqui)
-            const simulatedMembers = 100 + (i * 10) + Math.floor(Math.random() * 15);
-            const simulatedRevenue = 1000 + (i * 200) + Math.floor(Math.random() * 300);
+            const startOfMonth = new Date(date.getFullYear(), date.getMonth(), 1);
+            const endOfMonth = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+
+            // Contagem de membros ativos no mês (simplificado para membros criados no mês)
+            const membersThisMonth = members.filter(m => {
+                const memberDate = new Date(m.created_at); // Use created_at
+                return memberDate >= startOfMonth && memberDate <= endOfMonth;
+            }).length;
+
+            // Receita total no mês
+            const revenueThisMonth = transactions.filter(t => {
+                const transactionDate = new Date(t.created_at); // Use created_at
+                return t.type === 'revenue' && transactionDate >= startOfMonth && transactionDate <= endOfMonth;
+            }).reduce((sum, t) => sum + parseFloat(t.amount), 0);
+
 
             dataPoints.push({
                 month: `${month}/${year}`,
-                members: simulatedMembers,
-                revenue: simulatedRevenue
+                members: membersThisMonth,
+                revenue: revenueThisMonth
             });
         }
 
+        const maxMembers = Math.max(...dataPoints.map(d => d.members));
+        const maxRevenue = Math.max(...dataPoints.map(d => d.revenue));
+        // Ajuste o escalonamento para que ambos (membros e receita) caibam razoavelmente
+        const maxOverall = Math.max(maxMembers, maxRevenue / 100); // Ex: R$100 de receita = 1 membro em altura
+
         monthlyPerformanceChart.innerHTML = `
-            <p><strong>Membros:</strong> ${dataPoints.map(d => `${d.members}`).join(' - ')}</p>
-            <p><strong>Receita:</strong> ${dataPoints.map(d => `${formatCurrency(d.revenue)}`).join(' - ')}</p>
-            <div style="display: flex; justify-content: space-around; align-items: flex-end; height: 150px; border-bottom: 1px solid var(--text-light); padding-bottom: 5px; width: 100%;">
+            <div class="data-label">
+                <span style="color: var(--primary-color);">Membros</span> /
+                <span style="color: var(--success-color);">Receita</span>
+            </div>
+            <div style="display: flex; justify-content: space-around; align-items: flex-end; height: 100%; width: 100%; padding-bottom: 5px;">
                 ${dataPoints.map(d => `
-                    <div style="display: flex; flex-direction: column; align-items: center;">
-                        <div class="bar" style="height: ${d.members / 2}px; background-color: var(--primary-color);" title="Membros: ${d.members}"></div>
-                        <div class="bar" style="height: ${d.revenue / 200}px; background-color: var(--success-color);" title="Receita: ${formatCurrency(d.revenue)}"></div>
-                        <small style="font-size: 0.7em; color: var(--text-light); margin-top: 5px;">${d.month}</small>
+                    <div class="bar-group">
+                        <div class="bar members" style="height: ${Math.max(5, (d.members / (maxOverall || 1)) * 80)}%;" title="Membros: ${d.members}"></div>
+                        <div class="bar revenue" style="height: ${Math.max(5, (d.revenue / (maxOverall * 100 || 1)) * 80)}%;" title="Receita: ${formatCurrency(d.revenue)}"></div>
+                        <span class="bar-label">${d.month}</span>
                     </div>
                 `).join('')}
             </div>
         `;
     }
 
-
     function renderRecentActivity() {
         if (!recentActivityList) return;
 
-        recentActivityList.innerHTML = ''; // Limpa o conteúdo
+        recentActivityList.innerHTML = '';
 
-        // Coleta todas as atividades recentes dos diferentes módulos
         let activities = [];
 
         // Membros recém-adicionados (últimos 30 dias)
         const thirtyDaysAgo = new Date();
         thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-        members.filter(m => new Date(m.entryDate) >= thirtyDaysAgo).forEach(m => {
+        members.filter(m => new Date(m.created_at) >= thirtyDaysAgo).forEach(m => {
             activities.push({
                 type: 'member',
                 text: `Novo membro: <strong>${m.name}</strong> (${m.status})`,
-                timestamp: new Date(m.entryDate)
+                timestamp: new Date(m.created_at)
             });
         });
 
@@ -942,27 +1067,27 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         // Últimas 5 transações
-        const sortedTransactions = [...transactions].sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 5);
+        const sortedTransactions = [...transactions].sort((a, b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, 5);
         sortedTransactions.forEach(t => {
             const sign = t.type === 'revenue' ? '+' : '-';
             activities.push({
                 type: 'finance',
                 text: `${t.type === 'revenue' ? 'Receita' : 'Despesa'}: <strong>${t.description}</strong> (${sign} ${formatCurrency(t.amount)})`,
-                timestamp: new Date(t.date)
+                timestamp: new Date(t.created_at)
             });
         });
 
         // Últimas 3 postagens
-        const sortedPosts = [...posts].sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 3);
+        const sortedPosts = [...posts].sort((a, b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, 3);
         sortedPosts.forEach(p => {
             activities.push({
                 type: 'social',
                 text: `Postagem de <strong>${p.author}</strong>: "${p.content.substring(0, 40)}..."`,
-                timestamp: new Date(p.date)
+                timestamp: new Date(p.created_at)
             });
         });
 
-        // Últimas 3 mensagens de chat
+        // Últimas 3 mensagens de chat (ainda de localStorage para este exemplo)
         const sortedChatMessages = [...chatMessages].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)).slice(0, 3);
         sortedChatMessages.forEach(m => {
             activities.push({
@@ -976,7 +1101,6 @@ document.addEventListener('DOMContentLoaded', () => {
         // Ordena todas as atividades por timestamp, da mais recente para a mais antiga
         activities.sort((a, b) => b.timestamp - a.timestamp);
 
-        // Limita a um número razoável de atividades para não sobrecarregar
         const displayLimit = 10;
         const activitiesToDisplay = activities.slice(0, displayLimit);
 
@@ -1025,14 +1149,14 @@ document.addEventListener('DOMContentLoaded', () => {
             chatSendButton.addEventListener('click', () => {
                 const message = chatInput.value.trim();
                 if (message) {
-                    addMessage(message, userProfile.name, 'sent'); // Usa o nome do usuário logado
+                    addMessage(message, userProfile.name, 'sent');
                     chatInput.value = '';
                 }
             });
 
             chatInput.addEventListener('keypress', (e) => {
                 if (e.key === 'Enter') {
-                    e.preventDefault(); // Impede a quebra de linha no input
+                    e.preventDefault();
                     chatSendButton.click();
                 }
             });
@@ -1060,11 +1184,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 userProfile.phone = phoneInput.value;
                 userProfile.address = addressInput.value;
 
-                saveData('userProfile', userProfile); // Salva no localStorage
+                localStorage.setItem('userProfile', JSON.stringify(userProfile)); // Salva no localStorage
 
                 alert("Perfil salvo com sucesso!");
                 toggleProfileEditMode(false);
-                // Atualiza o dashboard se a página inicial estiver ativa
                 if (document.getElementById('home-page').classList.contains('active')) {
                     renderDashboard();
                 }
@@ -1086,14 +1209,14 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (churchForm) {
-            churchForm.addEventListener('submit', (e) => {
+            churchForm.addEventListener('submit', async (e) => { // Adicionado 'async'
                 e.preventDefault();
                 const name = churchNameInput.value.trim();
                 const address = churchAddressInput.value.trim();
                 const contact = churchContactInput.value.trim();
 
                 if (name && address) {
-                    addChurch(name, address, contact);
+                    await addChurch(name, address, contact); // Adicionado 'await'
                     toggleChurchFormMode(false);
                 } else {
                     alert("Por favor, preencha o nome e o endereço da igreja.");
@@ -1116,17 +1239,16 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (memberForm) {
-            memberForm.addEventListener('submit', (e) => {
+            memberForm.addEventListener('submit', async (e) => { // Adicionado 'async'
                 e.preventDefault();
                 const name = memberNameInput.value.trim();
                 const email = memberEmailInput.value.trim();
                 const phone = memberPhoneInput.value.trim();
                 const status = memberStatusSelect.value;
-                const churchId = churches[0] ? churches[0].id : 0; // Atribui à primeira igreja ou 0 se não houver
-                const entryDate = new Date().toISOString().split('T')[0]; // Data de hoje
+                const churchId = memberForm.querySelector('#member-church').value; // Pega o ID da igreja selecionada
 
                 if (name) {
-                    addMember(name, email, phone, status, churchId, entryDate);
+                    await addMember(name, email, phone, status, churchId); // created_at será setado pelo Supabase
                     toggleMemberFormMode(false);
                 } else {
                     alert("Por favor, preencha o nome do membro.");
@@ -1149,17 +1271,17 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (eventForm) {
-            eventForm.addEventListener('submit', (e) => {
+            eventForm.addEventListener('submit', async (e) => { // Adicionado 'async'
                 e.preventDefault();
                 const title = eventTitleInput.value.trim();
                 const date = eventDateInput.value;
                 const time = eventTimeInput.value.trim();
                 const location = eventLocationInput.value.trim();
                 const description = eventDescriptionInput.value.trim();
-                const type = "Geral"; // Adicionado tipo padrão
+                const type = "Geral";
 
                 if (title && date) {
-                    addEvent(title, date, time, location, description, type);
+                    await addEvent(title, date, time, location, description, type); // Adicionado 'await'
                     toggleEventFormMode(false);
                 } else {
                     alert("Por favor, preencha o título e a data do evento.");
@@ -1168,7 +1290,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Configuração de Eventos de Finanças
     function setupFinanceEvents() {
         if (addTransactionButton) {
             addTransactionButton.addEventListener('click', () => {
@@ -1183,7 +1304,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (transactionForm) {
-            transactionForm.addEventListener('submit', (e) => {
+            transactionForm.addEventListener('submit', async (e) => { // Adicionado 'async'
                 e.preventDefault();
                 const description = transactionDescriptionInput.value.trim();
                 const amount = transactionAmountInput.value;
@@ -1191,7 +1312,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const date = transactionDateInput.value;
 
                 if (description && amount && !isNaN(parseFloat(amount)) && parseFloat(amount) > 0 && date) {
-                    addTransaction(description, amount, type, date);
+                    await addTransaction(description, amount, type, date); // Adicionado 'await'
                     toggleTransactionFormMode(false);
                 } else {
                     alert("Por favor, preencha todos os campos da transação corretamente (valor deve ser numérico e positivo).");
@@ -1200,14 +1321,13 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Configuração de Eventos de Rede Social
     function setupSocialEvents() {
         if (newPostForm) {
-            newPostForm.addEventListener('submit', (e) => {
+            newPostForm.addEventListener('submit', async (e) => { // Adicionado 'async'
                 e.preventDefault();
                 const content = postContentInput.value.trim();
                 if (content) {
-                    addPost(userProfile.name, content);
+                    await addPost(userProfile.name, content); // Adicionado 'await'
                     postContentInput.value = '';
                 } else {
                     alert("Por favor, digite algo para postar.");
@@ -1226,5 +1346,7 @@ document.addEventListener('DOMContentLoaded', () => {
     setupEventEvents();
     setupFinanceEvents();
     setupSocialEvents();
-    showPage('home'); // Define a página inicial ao carregar
+
+    // Inicia a página home e busca os dados iniciais
+    await showPage('home'); // Adicionado 'await'
 });
