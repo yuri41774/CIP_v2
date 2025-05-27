@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Gerenciamento Congregacional</title>
+    <link rel="stylesheet" href="style.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+    />
+</head>
+<body>
+  <aside class="sidebar">
+    <div class="logo">
+      <img
+        src="https://assets.website-files.com/624b5a4521e1e07b39922a07/62506e00192a542b85a3a286_Logomark-Dark.svg"
+        alt="Supabase Logo"
+        class="supabase-logo"
+      />
+      <h2>Gestão da Igreja</h2>
+    </div>
+    <nav class="main-nav">
+      <ul>
+        <li>
+          <a href="#" class="nav-link active" data-page="home"
+            ><i class="fas fa-home"></i> Dashboard</a
+          >
+        </li>
+        <li>
+          <a href="#" class="nav-link" data-page="profile"
+            ><i class="fas fa-user-circle"></i> Meu Perfil</a
+          >
+        </li>
+        <li>
+          <a href="#" class="nav-link" data-page="churches"
+            ><i class="fas fa-church"></i> Igrejas</a
+          >
+        </li>
+        <li>
+          <a href="#" class="nav-link" data-page="members"
+            ><i class="fas fa-users"></i> Membros</a
+          >
+        </li>
+        <li>
+          <a href="#" class="nav-link" data-page="events"
+            ><i class="fas fa-calendar-alt"></i> Eventos</a
+          >
+        </li>
+        <li>
+          <a href="#" class="nav-link" data-page="finances"
+            ><i class="fas fa-money-bill-wave"></i> Finanças</a
+          >
+        </li>
+        <li>
+          <a href="#" class="nav-link" data-page="social"
+            ><i class="fas fa-share-alt"></i> Mural Social</a
+          >
+        </li>
+      </ul>
+    </nav>
+    <div class="sidebar-footer">
+      <button class="chat-button" id="chat-button" data-page="chat">
+        <i class="fas fa-comments"></i> Chat da Comunidade
+      </button>
+      <p>&copy; 2024 Gestão da Igreja</p>
+    </div>
+  </aside>
+
+  <main class="main-content" role="main">
+    <header class="top-header">
+      <h1 id="current-page-title">Dashboard</h1>
+      <div class="user-info">
+        <span>Olá, João!</span>
+        <i class="fas fa-bell"></i>
+        <i class="fas fa-sign-out-alt"></i>
+      </div>
+    </header>
+
+    <section id="home-page" class="page active">
+      <div class="page-header">
+        <h2>Visão Geral do Dashboard</h2>
+      </div>
+      <div class="dashboard-summary-grid">
+        <div class="summary-card">
+          <h3>Total de Membros</h3>
+          <p id="total-membros">...</p>
+        </div>
+        <div class="summary-card">
+          <h3>Eventos Neste Mês</h3>
+          <p id="eventos-mes">...</p>
+        </div>
+        <div class="summary-card">
+          <h3>Receita do Mês</h3>
+          <p id="receita-mes">R$ ...</p>
+        </div>
+      </div>
+
+      <div class="dashboard-insights-grid">
+        <div class="insight-card">
+          <h3>Nova Conversão</h3>
+          <p>3 membros batizados esta semana</p>
+        </div>
+        <div class="insight-card">
+          <h3>Participação em Cultos</h3>
+          <p>80% de presença média</p>
+        </div>
+      </div>
+
+      <div class="dashboard-charts-recent-activity">
+        <div class="card chart-card">
+          <h3 class="card-title">Performance Mensal (Simulado)</h3>
+          <div id="monthly-performance-chart" class="chart-container">
+            <p>Gráfico de desempenho mensal será exibido aqui.</p>
+          </div>
+        </div>
+        <div class="card recent-activity-card">
+          <h3 class="card-title">Atividade Recente</h3>
+          <ul id="recent-activity-list" class="activity-list">
+            <li>Maria cadastrou um novo membro</li>
+            <li>João atualizou as informações da igreja</li>
+            <li>Reunião de líderes marcada para sexta-feira</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- Outras seções podem ser implementadas aqui -->
+
+  </main>
+
+  <!-- Importando a biblioteca do Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <script>
+    const supabaseUrl = 'https://bilhtpgelctnybjemzeg.supabase.co';
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJpbGh0cGdlbGN0bnliamVtemVnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgyNzgzOTYsImV4cCI6MjA2Mzg1NDM5Nn0.yybV4HP0d9KAJGxMq7y8N_AHKgqPHNXoqu0oH_Waoh4';
+
+    // CORRETO: createClient é uma função global disponibilizada pela lib
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    async function carregarResumoDashboard() {
+      try {
+        const { data: membros, error: membrosError } = await supabase
+          .from('membros')
+          .select('*');
+        if (membrosError) throw membrosError;
+
+        const { data: eventos, error: eventosError } = await supabase
+          .from('eventos')
+          .select('*');
+        if (eventosError) throw eventosError;
+
+        const { data: receitas, error: receitasError } = await supabase
+          .from('receitas')
+          .select('*');
+        if (receitasError) throw receitasError;
+
+        document.getElementById('total-membros').textContent = membros.length;
+
+        const mesAtual = new Date().getMonth();
+        const eventosDoMes = eventos.filter(
+          (ev) => new Date(ev.data).getMonth() === mesAtual
+        );
+        document.getElementById('eventos-mes').textContent = eventosDoMes.length;
+
+        const receitasDoMes = receitas.filter(
+          (rec) => new Date(rec.data).getMonth() === mesAtual
+        );
+        const totalReceita = receitasDoMes.reduce(
+          (acc, rec) => acc + (rec.valor || 0),
+          0
+        );
+        document.getElementById(
+          'receita-mes'
+        ).textContent = `R$ ${totalReceita.toLocaleString('pt-BR', {
+          minimumFractionDigits: 2,
+        })}`;
+      } catch (e) {
+        console.error('Erro ao carregar dados do Supabase:', e);
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      carregarResumoDashboard();
+
+      document.querySelectorAll('.nav-link, #chat-button').forEach((link) => {
+        link.addEventListener('click', () => {
+          const pageId = link.dataset.page + '-page';
+          document.querySelectorAll('.page').forEach((section) =>
+            section.classList.remove('active')
+          );
+          const page = document.getElementById(pageId);
+          if (page) page.classList.add('active');
+          const title = link.textContent.trim();
+          document.getElementById('current-page-title').textContent = title;
+          document.querySelectorAll('.nav-link').forEach((l) =>
+            l.classList.remove('active')
+          );
+          if (link.classList.contains('nav-link')) link.classList.add('active');
+        });
+      });
+    });
+  </script>
+</body>
+</html>
