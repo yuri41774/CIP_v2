@@ -1,0 +1,815 @@
+/* Variáveis CSS para Cores e Espaçamento */
+:root {
+    --primary-color: #4A90E2; /* Azul vibrante */
+    --secondary-color: #50B2C0; /* Azul teal */
+    --accent-color: #F5A623; /* Laranja/Amarelo para destaque */
+    --text-color: #333; /* Texto principal escuro */
+    --text-light: #666; /* Texto secundário/leve */
+    --background-color: #F4F7F6; /* Fundo geral claro */
+    --background-card: #FFFFFF; /* Fundo de cards/elements */
+    --border-color: #E0E0E0; /* Cor da borda leve */
+    --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.05); /* Sombra pequena */
+    --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.1); /* Sombra média */
+    --success-color: #28a745; /* Verde para sucesso */
+    --danger-color: #dc3545; /* Vermelho para perigo/erro */
+    --info-color: #17a2b8; /* Azul claro para informações */
+    --warning-color: #ffc107; /* Amarelo para alertas */
+
+    /* Espaçamento */
+    --spacing-xxs: 4px;
+    --spacing-xs: 8px;
+    --spacing-sm: 12px;
+    --spacing-md: 16px;
+    --spacing-lg: 24px;
+    --spacing-xl: 32px;
+    --spacing-xxl: 48px;
+
+    /* Tamanhos de Fonte */
+    --font-size-small: 0.875rem; /* 14px */
+    --font-size-base: 1rem;     /* 16px */
+    --font-size-large: 1.125rem; /* 18px */
+    --font-size-xl: 1.5rem;    /* 24px */
+    --font-size-xxl: 2rem;     /* 32px */
+
+    /* Bordas e Radii */
+    --border-radius: 8px;
+    --border-thin: 1px solid var(--border-color);
+}
+
+/* Reset Básico e Fontes */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    line-height: 1.6;
+    color: var(--text-color);
+    background-color: var(--background-color);
+    display: flex; /* Para layout sidebar + content */
+    min-height: 100vh;
+}
+
+a {
+    text-decoration: none;
+    color: var(--primary-color);
+}
+
+ul {
+    list-style: none;
+}
+
+/* Layout Principal */
+.sidebar {
+    width: 250px;
+    background-color: var(--background-card);
+    box-shadow: var(--shadow-md);
+    padding: var(--spacing-lg);
+    display: flex;
+    flex-direction: column;
+    position: fixed; /* Fixa a sidebar na tela */
+    height: 100%;
+    overflow-y: auto; /* Adiciona scroll se o conteúdo for muito longo */
+}
+
+.sidebar .logo {
+    font-size: var(--font-size-xl);
+    font-weight: 700;
+    color: var(--primary-color);
+    text-align: center;
+    margin-bottom: var(--spacing-xl);
+    padding-bottom: var(--spacing-md);
+    border-bottom: var(--border-thin);
+}
+
+.sidebar .nav-list {
+    flex-grow: 1; /* Permite que a lista ocupe o espaço disponível */
+}
+
+.sidebar .nav-item {
+    margin-bottom: var(--spacing-sm);
+}
+
+.sidebar .nav-link {
+    display: flex;
+    align-items: center;
+    padding: var(--spacing-sm) var(--spacing-md);
+    color: var(--text-color);
+    border-radius: var(--border-radius);
+    transition: background-color 0.2s, color 0.2s;
+    font-weight: 500;
+}
+
+.sidebar .nav-link i {
+    margin-right: var(--spacing-sm);
+    font-size: var(--font-size-large);
+}
+
+.sidebar .nav-link:hover,
+.sidebar .nav-link.active {
+    background-color: var(--primary-color);
+    color: var(--background-card);
+}
+
+.container {
+    flex-grow: 1; /* Ocupa o restante do espaço */
+    margin-left: 250px; /* Compensa a largura da sidebar fixa */
+    padding: var(--spacing-xl);
+}
+
+.main-header {
+    background-color: var(--background-card);
+    padding: var(--spacing-md) var(--spacing-lg);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-sm);
+    margin-bottom: var(--spacing-xl);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.main-header h1 {
+    font-size: var(--font-size-xxl);
+    color: var(--primary-color);
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    font-weight: 500;
+    color: var(--text-light);
+}
+
+.user-info img {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    margin-left: var(--spacing-sm);
+    border: 2px solid var(--primary-color);
+}
+
+/* Páginas */
+.page {
+    display: none; /* Esconde todas as páginas por padrão */
+    background-color: var(--background-color);
+    padding: var(--spacing-xl) 0; /* Padding superior para evitar choque com o header */
+}
+
+.page.active {
+    display: block; /* Mostra a página ativa */
+}
+
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-lg);
+}
+
+.page-header h2 {
+    font-size: var(--font-size-xxl);
+    color: var(--primary-color);
+}
+
+/* Cards Gerais */
+.card {
+    background-color: var(--background-card);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-sm);
+    padding: var(--spacing-lg);
+    margin-bottom: var(--spacing-xl);
+    border: var(--border-thin);
+}
+
+.card .card-header {
+    font-size: var(--font-size-large);
+    font-weight: 600;
+    color: var(--primary-color);
+    margin-bottom: var(--spacing-md);
+    padding-bottom: var(--spacing-sm);
+    border-bottom: var(--border-thin);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+/* Botões */
+.btn {
+    padding: var(--spacing-xs) var(--spacing-md);
+    border: none;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    font-size: var(--font-size-base);
+    font-weight: 500;
+    transition: background-color 0.2s, transform 0.2s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-xxs);
+}
+
+.btn i {
+    margin-right: var(--spacing-xxs);
+}
+
+.btn-primary {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.btn-primary:hover {
+    background-color: #3a7bd5; /* Tom mais escuro de primary */
+    transform: translateY(-1px);
+}
+
+.btn-secondary {
+    background-color: #6c757d; /* Cinza */
+    color: white;
+}
+
+.btn-secondary:hover {
+    background-color: #5a6268;
+    transform: translateY(-1px);
+}
+
+.btn-danger {
+    background-color: var(--danger-color);
+    color: white;
+}
+
+.btn-danger:hover {
+    background-color: #bb2d3b;
+    transform: translateY(-1px);
+}
+
+.btn-success {
+    background-color: var(--success-color);
+    color: white;
+}
+
+.btn-success:hover {
+    background-color: #218838;
+    transform: translateY(-1px);
+}
+
+.btn-small {
+    padding: var(--spacing-xxs) var(--spacing-sm);
+    font-size: var(--font-size-small);
+}
+
+/* Formulários */
+.form-group {
+    margin-bottom: var(--spacing-md);
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: var(--spacing-xs);
+    font-weight: 500;
+    color: var(--text-light);
+}
+
+.form-group input[type="text"],
+.form-group input[type="email"],
+.form-group input[type="tel"],
+.form-group input[type="number"],
+.form-group input[type="date"],
+.form-group input[type="time"],
+.form-group textarea,
+.form-group select {
+    width: 100%;
+    padding: var(--spacing-sm);
+    border: var(--border-thin);
+    border-radius: var(--border-radius);
+    font-size: var(--font-size-base);
+    color: var(--text-color);
+    background-color: var(--background-color);
+}
+
+.form-group input:focus,
+.form-group textarea:focus,
+.form-group select:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.2);
+}
+
+.form-actions {
+    display: flex;
+    gap: var(--spacing-md);
+    margin-top: var(--spacing-lg);
+}
+
+/* Utilitários */
+.hidden {
+    display: none !important;
+}
+
+/* --- Estilos Específicos para Listas (Igrejas, Membros, Eventos, Transações) --- */
+.list-container {
+    padding: 0;
+}
+
+.list-container li {
+    background-color: var(--background-card);
+    border: var(--border-thin);
+    border-radius: var(--border-radius);
+    padding: var(--spacing-md);
+    margin-bottom: var(--spacing-sm);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: box-shadow 0.2s;
+}
+
+.list-container li:hover {
+    box-shadow: var(--shadow-sm);
+}
+
+.list-item-info h3 {
+    font-size: var(--font-size-large);
+    color: var(--primary-color);
+    margin-bottom: var(--spacing-xxs);
+}
+
+.list-item-info p {
+    font-size: var(--font-size-small);
+    color: var(--text-light);
+    margin-bottom: var(--spacing-xxs);
+}
+
+.list-item-actions {
+    display: flex;
+    gap: var(--spacing-sm);
+}
+
+/* --- Estilos Específicos para Finanças Summary --- */
+.finances-summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--spacing-xl);
+    margin-bottom: var(--spacing-xl);
+}
+
+.finances-summary .summary-card {
+    background-color: var(--background-card);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-sm);
+    padding: var(--spacing-lg);
+    text-align: center;
+}
+
+.finances-summary .summary-card h4 {
+    color: var(--primary-color);
+    margin-bottom: var(--spacing-sm);
+    font-size: var(--font-size-large);
+}
+
+.finances-summary .summary-card .value {
+    font-size: var(--font-size-xl);
+    font-weight: 700;
+}
+
+.finances-summary .summary-card .revenue {
+    color: var(--success-color);
+}
+
+.finances-summary .summary-card .expense {
+    color: var(--danger-color);
+}
+
+.finances-summary .summary-card .balance-positive {
+    color: var(--primary-color);
+}
+
+.finances-summary .summary-card .balance-negative {
+    color: var(--danger-color);
+}
+
+/* Estilos para lista de transações */
+.transaction-info .description {
+    font-weight: 600;
+    color: var(--text-color);
+    margin-bottom: var(--spacing-xxs);
+}
+
+.transaction-info p {
+    font-size: var(--font-size-small);
+    color: var(--text-light);
+}
+
+.transaction-amount {
+    font-weight: 700;
+    font-size: var(--font-size-large);
+    flex-shrink: 0; /* Impede que o valor seja espremido */
+}
+
+/* --- Estilos Específicos para Rede Social (Posts) --- */
+.post-item {
+    background-color: var(--background-card);
+    border: var(--border-thin);
+    border-radius: var(--border-radius);
+    padding: var(--spacing-md);
+    margin-bottom: var(--spacing-md);
+    box-shadow: var(--shadow-sm);
+}
+
+.post-item .post-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-sm);
+    padding-bottom: var(--spacing-xxs);
+    border-bottom: 1px dashed var(--border-color);
+}
+
+.post-item .post-author {
+    font-weight: 600;
+    color: var(--primary-color);
+}
+
+.post-item .post-date {
+    font-size: var(--font-size-small);
+    color: var(--text-light);
+}
+
+.post-item .post-content {
+    margin-bottom: var(--spacing-md);
+    white-space: pre-wrap; /* Preserva quebras de linha no textarea */
+}
+
+.post-item .post-actions {
+    text-align: right;
+}
+
+/* --- Estilos Específicos para Dashboard --- */
+.dashboard-summary-grid,
+.dashboard-reports-grid { /* Aplica grid a ambas as novas seções */
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); /* 3 colunas em telas maiores, ajusta para menos em menores */
+    gap: var(--spacing-xl);
+    margin-bottom: var(--spacing-xl);
+}
+
+.dashboard-summary-grid .summary-card,
+.dashboard-reports-grid .summary-card {
+    background-color: var(--background-card);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-sm);
+    padding: var(--spacing-lg);
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 120px; /* Garante altura mínima para os cards */
+    border: var(--border-thin);
+}
+
+.dashboard-summary-grid .summary-card h4,
+.dashboard-reports-grid .summary-card h4 {
+    color: var(--primary-color); /* Título do card mais proeminente */
+    margin-bottom: var(--spacing-sm);
+    font-size: var(--font-size-large);
+    font-weight: 600;
+    display: flex; /* Para alinhar ícone e texto do h4 */
+    align-items: center;
+}
+
+.dashboard-summary-grid .summary-card h4 i,
+.dashboard-reports-grid .summary-card h4 i {
+    margin-right: var(--spacing-xs); /* Espaço entre ícone e texto */
+}
+
+.dashboard-summary-grid .summary-card .value,
+.dashboard-reports-grid .summary-card .value {
+    font-size: var(--font-size-xl);
+    font-weight: 700;
+    color: var(--text-color);
+    margin-bottom: var(--spacing-xxs); /* Espaço entre valor principal e detalhe */
+}
+
+.dashboard-summary-grid .summary-card .last-item-detail,
+.dashboard-reports-grid .summary-card .last-item-detail {
+    font-size: var(--font-size-small);
+    color: var(--text-light);
+}
+
+/* Cores específicas para os novos cards de relatório/insights */
+.summary-card.info {
+    border-left: 5px solid var(--info-color);
+}
+.summary-card.warning {
+    border-left: 5px solid var(--warning-color);
+}
+.summary-card.success {
+    border-left: 5px solid var(--success-color);
+}
+.summary-card.danger {
+    border-left: 5px solid var(--danger-color);
+}
+
+/* Estilos para a seção de gráficos (simulados) */
+.dashboard-chart-section {
+    padding: var(--spacing-xl);
+}
+
+.chart-placeholder {
+    background-color: #f0f0f0;
+    height: 250px; /* Altura fixa para o gráfico simulado */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-style: italic;
+    color: var(--text-light);
+    border: var(--border-thin);
+    border-radius: var(--border-radius);
+    margin-top: var(--spacing-md);
+    margin-bottom: var(--spacing-md);
+    text-align: center;
+    font-size: var(--font-size-large);
+    line-height: 1.5;
+    background: linear-gradient(to right, #e0f2f7 0%, #c1e4ee 100%); /* Um gradiente para simular um fundo de gráfico */
+}
+
+.chart-placeholder .bar {
+    width: 20px;
+    background-color: var(--primary-color);
+    margin: 0 5px;
+    align-self: flex-end;
+    transition: height 0.5s ease-out;
+}
+
+.chart-caption {
+    font-size: var(--font-size-small);
+    color: var(--text-light);
+    text-align: center;
+    margin-top: var(--spacing-sm);
+}
+
+/* Estilos para Atividades Recentes */
+.dashboard-recent-activity .list-container {
+    max-height: 300px; /* Altura máxima para a lista de atividades */
+    overflow-y: auto; /* Adiciona scroll se tiver muitas atividades */
+    padding-right: var(--spacing-sm); /* Espaço para a barra de rolagem */
+}
+
+.dashboard-recent-activity .list-container li {
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-bottom: 1px dashed var(--border-color);
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+.dashboard-recent-activity .list-container li:last-child {
+    border-bottom: none;
+}
+
+.dashboard-recent-activity .activity-text {
+    font-size: var(--font-size-base);
+    color: var(--text-color);
+    font-weight: 500;
+}
+
+.dashboard-recent-activity .activity-timestamp {
+    font-size: var(--font-size-small);
+    color: var(--text-light);
+    margin-top: var(--spacing-xxs);
+}
+
+
+/* --- Estilos para o Chat (agora como uma página) --- */
+.chat-container {
+    background-color: var(--background-card);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    flex-direction: column;
+    height: 70vh; /* Altura do chat na página */
+    border: var(--border-thin);
+    overflow: hidden; /* Garante que as mensagens não transbordem */
+}
+
+.chat-header {
+    background-color: var(--primary-color);
+    color: white;
+    padding: var(--spacing-sm) var(--spacing-md);
+    font-weight: 600;
+    border-top-left-radius: var(--border-radius);
+    border-top-right-radius: var(--border-radius);
+    text-align: center;
+    font-size: var(--font-size-large);
+}
+
+.chat-messages {
+    flex-grow: 1;
+    padding: var(--spacing-md);
+    overflow-y: auto; /* Scroll para as mensagens */
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+    background-color: var(--background-color);
+}
+
+.chat-messages p {
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border-radius: var(--border-radius);
+    max-width: 80%;
+    word-wrap: break-word;
+    font-size: var(--font-size-small);
+}
+
+.chat-messages .message-sent {
+    align-self: flex-end;
+    background-color: var(--primary-color);
+    color: white;
+    border-bottom-right-radius: 2px;
+}
+
+.chat-messages .message-received {
+    align-self: flex-start;
+    background-color: var(--border-color);
+    color: var(--text-color);
+    border-bottom-left-radius: 2px;
+}
+
+.chat-messages .message-sent span,
+.chat-messages .message-received span {
+    font-weight: 600;
+    margin-right: var(--spacing-xxs);
+}
+
+.chat-input-area {
+    display: flex;
+    padding: var(--spacing-sm);
+    border-top: var(--border-thin);
+    background-color: var(--background-card);
+}
+
+.chat-input-area input {
+    flex-grow: 1;
+    padding: var(--spacing-sm);
+    border: var(--border-thin);
+    border-radius: var(--border-radius);
+    margin-right: var(--spacing-sm);
+    font-size: var(--font-size-base);
+}
+
+.chat-input-area button {
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: var(--border-radius);
+    padding: var(--spacing-sm) var(--spacing-md);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s;
+}
+
+.chat-input-area button:hover {
+    background-color: #3a7bd5;
+}
+
+.chat-input-area button i {
+    margin-right: 0; /* Remove margin para ícone único no botão */
+}
+
+/* Animação de Fade-in para mensagens de chat */
+.fade-in {
+    animation: fadeIn 0.5s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+
+/* Responsividade */
+@media (max-width: 992px) {
+    .sidebar {
+        width: 200px;
+    }
+    .container {
+        margin-left: 200px;
+    }
+    .main-header h1 {
+        font-size: var(--font-size-xl);
+    }
+    .dashboard-summary-grid,
+    .dashboard-reports-grid {
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    }
+}
+
+@media (max-width: 768px) {
+    body {
+        flex-direction: column; /* Sidebar no topo em telas menores */
+    }
+    .sidebar {
+        width: 100%;
+        position: static; /* Não fixa mais */
+        height: auto;
+        padding: var(--spacing-md);
+        box-shadow: var(--shadow-sm);
+    }
+    .sidebar .logo {
+        margin-bottom: var(--spacing-md);
+        padding-bottom: var(--spacing-sm);
+    }
+    .sidebar .nav-list {
+        display: flex;
+        flex-wrap: wrap; /* Quebra em múltiplas linhas */
+        justify-content: center;
+        gap: var(--spacing-xs);
+    }
+    .sidebar .nav-item {
+        margin-bottom: 0; /* Remove margem vertical */
+    }
+    .sidebar .nav-link {
+        padding: var(--spacing-xs);
+        font-size: var(--font-size-small);
+    }
+    .sidebar .nav-link i {
+        margin-right: var(--spacing-xxs);
+    }
+    .container {
+        margin-left: 0; /* Remove margem para sidebar */
+        padding: var(--spacing-md);
+    }
+    .main-header {
+        flex-direction: column;
+        text-align: center;
+        padding: var(--spacing-lg) var(--spacing-md);
+    }
+    .main-header h1 {
+        margin-bottom: var(--spacing-sm);
+    }
+    .user-info {
+        margin-top: var(--spacing-sm);
+        justify-content: center;
+    }
+    .page-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    .page-header h2 {
+        margin-bottom: var(--spacing-sm);
+    }
+    .dashboard-summary-grid,
+    .dashboard-reports-grid {
+        grid-template-columns: 1fr; /* Uma coluna em telas pequenas */
+    }
+    .finances-summary {
+        grid-template-columns: 1fr;
+    }
+    .list-container li {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    .list-item-actions {
+        width: 100%;
+        justify-content: flex-end;
+        margin-top: var(--spacing-sm);
+    }
+    .transaction-amount {
+        margin-top: var(--spacing-sm);
+    }
+    .chat-container {
+        height: 60vh; /* Ajusta altura do chat */
+    }
+}
+
+@media (max-width: 480px) {
+    .sidebar .nav-link {
+        font-size: 0.75rem; /* Menor ainda */
+        padding: var(--spacing-xs);
+    }
+    .sidebar .nav-link i {
+        font-size: 1rem;
+        margin-right: 0; /* Remove margin para ocupar menos espaço */
+    }
+    .sidebar .nav-link span {
+        display: none; /* Esconde o texto, mostra só o ícone */
+    }
+    .sidebar .nav-link.active span {
+        display: inline; /* Mostra o texto do ativo */
+    }
+
+    .chat-input-area input {
+        margin-right: var(--spacing-xs);
+    }
+    .chat-input-area button {
+        padding: var(--spacing-xs) var(--spacing-sm);
+    }
+}
